@@ -4,30 +4,30 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
+    using dotnet_etcd;
     using global::Consul;
     using Infrastructure.Extensions;
     using Logging;
     using ServiceDiscovery.Providers;
     using Values;
 
-
-    public class Consul : IServiceDiscoveryProvider
+    public class Etcd : IServiceDiscoveryProvider
     {
-        private readonly ConsulRegistryConfiguration _config;
+        private readonly EtcdRegistryConfiguration _config;
         private readonly IOcelotLogger _logger;
-        private readonly IConsulClient _consul;
+        private readonly EtcdClient _etcdClient;
         private const string VersionPrefix = "version-";
 
-        public Consul(ConsulRegistryConfiguration config, IOcelotLoggerFactory factory, IConsulClientFactory clientFactory)
+        public Etcd(EtcdRegistryConfiguration config, IOcelotLoggerFactory factory, IEtcdClientFactory clientFactory)
         {
-            _logger = factory.CreateLogger<Consul>();
+            _logger = factory.CreateLogger<Etcd>();
             _config = config;
-            _consul = clientFactory.Get(_config);
+            _etcdClient = clientFactory.Get(_config);
         }
 
         public async Task<List<Service>> Get()
         {
-            var queryResult = await _consul.Health.Service(_config.KeyOfServiceInConsul, string.Empty, true);
+            var queryResult = await _etcdClient.Health.Service(_config.KeyOfServiceInEtcd, string.Empty, true);
 
             var services = new List<Service>();
 

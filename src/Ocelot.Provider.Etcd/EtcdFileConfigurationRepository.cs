@@ -10,20 +10,20 @@
     using Newtonsoft.Json;
     using Responses;
 
-    public class ConsulFileConfigurationRepository : IFileConfigurationRepository
+    public class EtcdFileConfigurationRepository : IFileConfigurationRepository
     {
         private readonly IConsulClient _consul;
         private readonly string _configurationKey;
         private readonly Cache.IOcelotCache<FileConfiguration> _cache;
         private readonly IOcelotLogger _logger;
 
-        public ConsulFileConfigurationRepository(
+        public EtcdFileConfigurationRepository(
             Cache.IOcelotCache<FileConfiguration> cache,
             IInternalConfigurationRepository repo,
-            IConsulClientFactory factory,
+            IEtcdClientFactory factory,
             IOcelotLoggerFactory loggerFactory)
         {
-            _logger = loggerFactory.CreateLogger<ConsulFileConfigurationRepository>();
+            _logger = loggerFactory.CreateLogger<EtcdFileConfigurationRepository>();
             _cache = cache;
 
             var internalConfig = repo.Get();
@@ -39,7 +39,8 @@
                     internalConfig.Data.ServiceProviderConfiguration.ConfigurationKey : _configurationKey;
             }
 
-            var config = new ConsulRegistryConfiguration(internalConfig.Data.ServiceProviderConfiguration.Host,
+            var config = new EtcdRegistryConfiguration(
+                internalConfig.Data.ServiceProviderConfiguration.Host,
                 internalConfig.Data.ServiceProviderConfiguration.Port, _configurationKey, token);
 
             _consul = factory.Get(config);

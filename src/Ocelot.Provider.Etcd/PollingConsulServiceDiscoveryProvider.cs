@@ -7,7 +7,7 @@
     using ServiceDiscovery.Providers;
     using Values;
 
-    public class PollConsul : IServiceDiscoveryProvider
+    public class PollEtcd : IServiceDiscoveryProvider
     {
         private readonly IOcelotLogger _logger;
         private readonly IServiceDiscoveryProvider _consulServiceDiscoveryProvider;
@@ -15,9 +15,9 @@
         private bool _polling;
         private List<Service> _services;
 
-        public PollConsul(int pollingInterval, IOcelotLoggerFactory factory, IServiceDiscoveryProvider consulServiceDiscoveryProvider)
+        public PollEtcd(int pollingInterval, IOcelotLoggerFactory factory, IServiceDiscoveryProvider consulServiceDiscoveryProvider)
         {
-            _logger = factory.CreateLogger<PollConsul>();
+            _logger = factory.CreateLogger<PollEtcd>();
             _consulServiceDiscoveryProvider = consulServiceDiscoveryProvider;
             _services = new List<Service>();
 

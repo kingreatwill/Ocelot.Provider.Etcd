@@ -12,7 +12,7 @@
     using Middleware;
     using Responses;
 
-    public static class ConsulMiddlewareConfigurationProvider
+    public static class EtcdMiddlewareConfigurationProvider
     {
         public static OcelotMiddlewareConfigurationDelegate Get = async builder =>
         {
@@ -29,7 +29,7 @@
 
         private static bool UsingConsul(IFileConfigurationRepository fileConfigRepo)
         {
-            return fileConfigRepo.GetType() == typeof(ConsulFileConfigurationRepository);
+            return fileConfigRepo.GetType() == typeof(EtcdFileConfigurationRepository);
         }
 
         private static async Task SetFileConfigInConsul(IApplicationBuilder builder,
