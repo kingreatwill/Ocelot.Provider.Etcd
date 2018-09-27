@@ -21,37 +21,37 @@
             var internalConfigCreator = builder.ApplicationServices.GetService<IInternalConfigurationCreator>();
             var internalConfigRepo = builder.ApplicationServices.GetService<IInternalConfigurationRepository>();
 
-            if (UsingConsul(fileConfigRepo))
+            if (UsingEtcd(fileConfigRepo))
             {
-                await SetFileConfigInConsul(builder, fileConfigRepo, fileConfig, internalConfigCreator, internalConfigRepo);
+                await SetFileConfigInEtcd(builder, fileConfigRepo, fileConfig, internalConfigCreator, internalConfigRepo);
             }
         };
 
-        private static bool UsingConsul(IFileConfigurationRepository fileConfigRepo)
+        private static bool UsingEtcd(IFileConfigurationRepository fileConfigRepo)
         {
             return fileConfigRepo.GetType() == typeof(EtcdFileConfigurationRepository);
         }
 
-        private static async Task SetFileConfigInConsul(IApplicationBuilder builder,
+        private static async Task SetFileConfigInEtcd(IApplicationBuilder builder,
             IFileConfigurationRepository fileConfigRepo, IOptionsMonitor<FileConfiguration> fileConfig,
             IInternalConfigurationCreator internalConfigCreator, IInternalConfigurationRepository internalConfigRepo)
         {
-            // get the config from consul.
-            var fileConfigFromConsul = await fileConfigRepo.Get();
+            // get the config from Etcd.
+            var fileConfigFromEtcd = await fileConfigRepo.Get();
 
-            if (IsError(fileConfigFromConsul))
+            if (IsError(fileConfigFromEtcd))
             {
-                ThrowToStopOcelotStarting(fileConfigFromConsul);
+                ThrowToStopOcelotStarting(fileConfigFromEtcd);
             }
-            else if (ConfigNotStoredInConsul(fileConfigFromConsul))
+            else if (ConfigNotStoredInEtcd(fileConfigFromEtcd))
             {
-                //there was no config in consul set the file in config in consul
+                //there was no config in etcd set the file in config in etcd
                 await fileConfigRepo.Set(fileConfig.CurrentValue);
             }
             else
             {
-                // create the internal config from consul data
-                var internalConfig = await internalConfigCreator.Create(fileConfigFromConsul.Data);
+                // create the internal config from etcd data
+                var internalConfig = await internalConfigCreator.Create(fileConfigFromEtcd.Data);
 
                 if (IsError(internalConfig))
                 {
@@ -85,9 +85,9 @@
             return response == null || response.IsError;
         }
 
-        private static bool ConfigNotStoredInConsul(Response<FileConfiguration> fileConfigFromConsul)
+        private static bool ConfigNotStoredInEtcd(Response<FileConfiguration> fileConfigFromEtcd)
         {
-            return fileConfigFromConsul.Data == null;
+            return fileConfigFromEtcd.Data == null;
         }
     }
 }

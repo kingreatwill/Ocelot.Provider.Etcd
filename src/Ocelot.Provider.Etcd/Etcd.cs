@@ -5,9 +5,9 @@
     using System.Linq;
     using System.Threading.Tasks;
     using dotnet_etcd;
-    using global::Consul;
     using Infrastructure.Extensions;
     using Logging;
+    using Newtonsoft.Json;
     using ServiceDiscovery.Providers;
     using Values;
 
@@ -27,21 +27,29 @@
 
         public async Task<List<Service>> Get()
         {
-            var queryResult = await _etcdClient.GetAsync($"{_config.KeyOfServiceInEtcd}/Services");
+            // Services/srvname/srvid
+            var queryResult = await _etcdClient.GetRangeAsync($"{_config.KeyOfServiceInEtcd}/Services/");
 
             // var queryResult = await _etcdClient.Health.Service(_config.KeyOfServiceInEtcd, string.Empty, true);
 
             var services = new List<Service>();
 
-            foreach (var serviceEntry in queryResult.)
+            foreach (var dic in queryResult)
             {
-                if (IsValid(serviceEntry))
+                var srvs = dic.Key.Split('/');
+                if (srvs.Length == 4)
                 {
-                    services.Add(BuildService(serviceEntry));
-                }
-                else
-                {
-                    _logger.LogWarning($"Unable to use service Address: {serviceEntry.Service.Address} and Port: {serviceEntry.Service.Port} as it is invalid. Address must contain host only e.g. localhost and port must be greater than 0");
+                    var serviceEntry = JsonConvert.DeserializeObject<ServiceEntry>(dic.Value);
+                    serviceEntry.Name = srvs[2];
+                    serviceEntry.Id = srvs[3];
+                    if (IsValid(serviceEntry))
+                    {
+                        services.Add(BuildService(serviceEntry));
+                    }
+                    else
+                    {
+                        _logger.LogWarning($"Unable to use service Address: {serviceEntry.Host} and Port: {serviceEntry.Port} as it is invalid. Address must contain host only e.g. localhost and port must be greater than 0");
+                    }
                 }
             }
 
@@ -51,20 +59,19 @@
         private Service BuildService(ServiceEntry serviceEntry)
         {
             return new Service(
-                serviceEntry.Service.Service,
-                new ServiceHostAndPort(serviceEntry.Service.Address, serviceEntry.Service.Port),
-                serviceEntry.Service.ID,
-                GetVersionFromStrings(serviceEntry.Service.Tags),
-                serviceEntry.Service.Tags ?? Enumerable.Empty<string>());
+                serviceEntry.Name,
+                new ServiceHostAndPort(serviceEntry.Host, serviceEntry.Port),
+                serviceEntry.Id,
+              string.IsNullOrWhiteSpace(serviceEntry.Version) ? GetVersionFromStrings(serviceEntry.Tags) : serviceEntry.Version,
+                serviceEntry.Tags ?? Enumerable.Empty<string>());
         }
 
         private bool IsValid(ServiceEntry serviceEntry)
         {
-            if (string.IsNullOrEmpty(serviceEntry.Service.Address) || serviceEntry.Service.Address.Contains("http://") || serviceEntry.Service.Address.Contains("https://") || serviceEntry.Service.Port <= 0)
+            if (string.IsNullOrEmpty(serviceEntry.Host) || serviceEntry.Host.Contains("http://") || serviceEntry.Host.Contains("https://") || serviceEntry.Port <= 0)
             {
                 return false;
             }
-
             return true;
         }
 

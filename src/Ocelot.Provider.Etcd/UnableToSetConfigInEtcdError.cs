@@ -2,9 +2,9 @@
 {
     using Errors;
 
-    public class UnableToSetConfigInConsulError : Error
+    public class UnableToSetConfigInEtcdError : Error
     {
-        public UnableToSetConfigInConsulError(string s) 
+        public UnableToSetConfigInEtcdError(string s)
             : base(s, OcelotErrorCode.UnknownError)
         {
         }

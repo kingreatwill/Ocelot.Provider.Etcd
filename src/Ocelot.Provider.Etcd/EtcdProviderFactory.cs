@@ -12,18 +12,18 @@
         {
             var factory = provider.GetService<IOcelotLoggerFactory>();
 
-            var consulFactory = provider.GetService<IEtcdClientFactory>();
+            var etcdFactory = provider.GetService<IEtcdClientFactory>();
 
-            var consulRegistryConfiguration = new EtcdRegistryConfiguration(config.Host, config.Port, name);
+            var etcdRegistryConfiguration = new EtcdRegistryConfiguration(config.Host, config.Port, name);
 
-            var consulServiceDiscoveryProvider = new Etcd(consulRegistryConfiguration, factory, consulFactory);
+            var etcdServiceDiscoveryProvider = new Etcd(etcdRegistryConfiguration, factory, etcdFactory);
 
             if (config.Type?.ToLower() == "polletcd")
             {
-                return new PollEtcd(config.PollingInterval, factory, consulServiceDiscoveryProvider);
+                return new PollEtcd(config.PollingInterval, factory, etcdServiceDiscoveryProvider);
             }
 
-            return consulServiceDiscoveryProvider;
+            return etcdServiceDiscoveryProvider;
         };
     }
 }

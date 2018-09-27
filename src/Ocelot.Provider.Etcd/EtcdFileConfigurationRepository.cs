@@ -6,7 +6,6 @@
     using Configuration.File;
     using Configuration.Repository;
     using dotnet_etcd;
-    using global::Consul;
     using Logging;
     using Newtonsoft.Json;
     using Responses;
@@ -55,44 +54,25 @@
             {
                 return new OkResponse<FileConfiguration>(config);
             }
-
-            var queryResult = await _etcdClient.GetAsync($"{_configurationKey}/FileConfigurations");
-
-            if (queryResult.Response == null)
+            var queryResult = await _etcdClient.GetValAsync($"{_configurationKey}/FileConfiguration");
+            if (string.IsNullOrWhiteSpace(queryResult))
             {
                 return new OkResponse<FileConfiguration>(null);
             }
-
-            var bytes = queryResult.Response.Value;
-
-            var json = Encoding.UTF8.GetString(bytes);
-
-            var consulConfig = JsonConvert.DeserializeObject<FileConfiguration>(json);
-
-            return new OkResponse<FileConfiguration>(consulConfig);
+            var etcdConfig = JsonConvert.DeserializeObject<FileConfiguration>(queryResult);
+            return new OkResponse<FileConfiguration>(etcdConfig);
         }
 
         public async Task<Response> Set(FileConfiguration ocelotConfiguration)
         {
             var json = JsonConvert.SerializeObject(ocelotConfiguration, Formatting.Indented);
+            var result = await _etcdClient.PutAsync($"{_configurationKey}/FileConfiguration", json);
 
-            var bytes = Encoding.UTF8.GetBytes(json);
+            _cache.AddAndDelete(_configurationKey, ocelotConfiguration, TimeSpan.FromSeconds(3), _configurationKey);
 
-            var kvPair = new KVPair(_configurationKey)
-            {
-                Value = bytes
-            };
+            return new OkResponse();
 
-            var result = await _etcdClient.KV.Put(kvPair);
-
-            if (result.Response)
-            {
-                _cache.AddAndDelete(_configurationKey, ocelotConfiguration, TimeSpan.FromSeconds(3), _configurationKey);
-
-                return new OkResponse();
-            }
-
-            return new ErrorResponse(new UnableToSetConfigInConsulError($"Unable to set FileConfiguration in consul, response status code from consul was {result.StatusCode}"));
+            // return new ErrorResponse(new UnableToSetConfigInEtcdError($"Unable to set FileConfiguration in etcd, response status code from etcd was {result.StatusCode}"));
         }
     }
 }

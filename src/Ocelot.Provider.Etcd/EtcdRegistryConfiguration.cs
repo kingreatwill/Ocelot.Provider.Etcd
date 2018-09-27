@@ -4,7 +4,7 @@
     {
         public EtcdRegistryConfiguration(string host, int port, string keyOfServiceInEtcd)
         {
-            this.Host = string.IsNullOrEmpty(host) ? "127.0.0.1" : host;
+            this.Host = string.IsNullOrEmpty(host) ? "localhost" : host;
             this.Port = port > 0 ? port : 2379;
             this.KeyOfServiceInEtcd = keyOfServiceInEtcd;
 
