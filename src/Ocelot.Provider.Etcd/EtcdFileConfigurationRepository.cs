@@ -5,6 +5,7 @@
     using System.Threading.Tasks;
     using Configuration.File;
     using Configuration.Repository;
+    using dotnet_etcd;
     using global::Consul;
     using Logging;
     using Newtonsoft.Json;
@@ -12,7 +13,7 @@
 
     public class EtcdFileConfigurationRepository : IFileConfigurationRepository
     {
-        private readonly IConsulClient _consul;
+        private readonly EtcdClient _etcdClient;
         private readonly string _configurationKey;
         private readonly Cache.IOcelotCache<FileConfiguration> _cache;
         private readonly IOcelotLogger _logger;
@@ -41,9 +42,9 @@
 
             var config = new EtcdRegistryConfiguration(
                 internalConfig.Data.ServiceProviderConfiguration.Host,
-                internalConfig.Data.ServiceProviderConfiguration.Port, _configurationKey, token);
+                internalConfig.Data.ServiceProviderConfiguration.Port, _configurationKey);
 
-            _consul = factory.Get(config);
+            _etcdClient = factory.Get(config);
         }
 
         public async Task<Response<FileConfiguration>> Get()
@@ -55,7 +56,7 @@
                 return new OkResponse<FileConfiguration>(config);
             }
 
-            var queryResult = await _consul.KV.Get(_configurationKey);
+            var queryResult = await _etcdClient.GetAsync($"{_configurationKey}/FileConfigurations");
 
             if (queryResult.Response == null)
             {
@@ -82,7 +83,7 @@
                 Value = bytes
             };
 
-            var result = await _consul.KV.Put(kvPair);
+            var result = await _etcdClient.KV.Put(kvPair);
 
             if (result.Response)
             {

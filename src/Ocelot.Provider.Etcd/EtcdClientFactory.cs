@@ -2,7 +2,6 @@
 {
     using System;
     using dotnet_etcd;
-    using global::Consul;
 
     public class EtcdClientFactory : IEtcdClientFactory
     {

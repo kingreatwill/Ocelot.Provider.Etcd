@@ -10,18 +10,19 @@
     public class PollEtcd : IServiceDiscoveryProvider
     {
         private readonly IOcelotLogger _logger;
-        private readonly IServiceDiscoveryProvider _consulServiceDiscoveryProvider;
+        private readonly IServiceDiscoveryProvider _etcdServiceDiscoveryProvider;
         private readonly Timer _timer;
         private bool _polling;
         private List<Service> _services;
 
-        public PollEtcd(int pollingInterval, IOcelotLoggerFactory factory, IServiceDiscoveryProvider consulServiceDiscoveryProvider)
+        public PollEtcd(int pollingInterval, IOcelotLoggerFactory factory, IServiceDiscoveryProvider etcdServiceDiscoveryProvider)
         {
             _logger = factory.CreateLogger<PollEtcd>();
-            _consulServiceDiscoveryProvider = consulServiceDiscoveryProvider;
+            _etcdServiceDiscoveryProvider = etcdServiceDiscoveryProvider;
             _services = new List<Service>();
 
-            _timer = new Timer(async x =>
+            _timer = new Timer(
+                async x =>
             {
                 if (_polling)
                 {
@@ -41,7 +42,7 @@
 
         private async Task Poll()
         {
-            _services = await _consulServiceDiscoveryProvider.Get();
+            _services = await _etcdServiceDiscoveryProvider.Get();
         }
     }
 }

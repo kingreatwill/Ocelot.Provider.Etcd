@@ -27,11 +27,13 @@
 
         public async Task<List<Service>> Get()
         {
-            var queryResult = await _etcdClient.Health.Service(_config.KeyOfServiceInEtcd, string.Empty, true);
+            var queryResult = await _etcdClient.GetAsync($"{_config.KeyOfServiceInEtcd}/Services");
+
+            // var queryResult = await _etcdClient.Health.Service(_config.KeyOfServiceInEtcd, string.Empty, true);
 
             var services = new List<Service>();
 
-            foreach (var serviceEntry in queryResult.Response)
+            foreach (var serviceEntry in queryResult.)
             {
                 if (IsValid(serviceEntry))
                 {

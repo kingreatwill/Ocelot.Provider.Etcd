@@ -8,14 +8,14 @@
 
     public static class OcelotBuilderExtensions
     {
-        public static IOcelotBuilder AddConsul(this IOcelotBuilder builder)
+        public static IOcelotBuilder AddEtcd(this IOcelotBuilder builder)
         {
             builder.Services.AddSingleton<ServiceDiscoveryFinderDelegate>(EtcdProviderFactory.Get);
             builder.Services.AddSingleton<IEtcdClientFactory, EtcdClientFactory>();
             return builder;
         }
 
-        public static IOcelotBuilder AddConfigStoredInConsul(this IOcelotBuilder builder)
+        public static IOcelotBuilder AddConfigStoredInEtcd(this IOcelotBuilder builder)
         {
             builder.Services.AddSingleton<OcelotMiddlewareConfigurationDelegate>(EtcdMiddlewareConfigurationProvider.Get);
             builder.Services.AddHostedService<FileConfigurationPoller>();
