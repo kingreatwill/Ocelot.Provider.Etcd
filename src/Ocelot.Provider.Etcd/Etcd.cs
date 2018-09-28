@@ -27,16 +27,14 @@
 
         public async Task<List<Service>> Get()
         {
-            // Services/srvname/srvid
-            var queryResult = await _etcdClient.GetRangeAsync($"{_config.KeyOfServiceInEtcd}/Services/");
-
-            // var queryResult = await _etcdClient.Health.Service(_config.KeyOfServiceInEtcd, string.Empty, true);
+            // /Ocelot/Services/srvname/srvid
+            var queryResult = await _etcdClient.GetRangeAsync($"/Ocelot/Services/{_config.KeyOfServiceInEtcd}");
 
             var services = new List<Service>();
 
             foreach (var dic in queryResult)
             {
-                var srvs = dic.Key.Split('/');
+                var srvs = dic.Key.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
                 if (srvs.Length == 4)
                 {
                     var serviceEntry = JsonConvert.DeserializeObject<ServiceEntry>(dic.Value);
